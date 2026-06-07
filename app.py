@@ -14,7 +14,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="main-title">🎓 위풍당당 실수 연구소</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">나의 실수를 당당하게 긍정하고(Amor Fati), 자신만의 성장 경로(Rhizome)를 탐색하는 교실</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">나의 실수를 당당하게 긍정하고, 나만의 성장 경로를 탐색하는 교실</div>', unsafe_allow_html=True)
 # 2. 사이드바 API 키 입력 설정 (이제 키 입력창을 없애고 설명만 남긴다!)
 with st.sidebar:
     st.header("🔑 시스템 설정")
