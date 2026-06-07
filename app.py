@@ -56,29 +56,31 @@ if submit_btn:
     else:
         with st.spinner("연구소장 AI가 당신의 실수를 위대한 자산으로 재해석하는 중..."):
             try:
-                # 사이드바 입력창 대신 streamlit의 비밀 금고(secrets)에서 키를 자동으로 꺼내온다!
+                # 스트림릿의 비밀 금고(secrets)에서 Groq API 키를 가져옵니다.
                 client = OpenAI(
                     base_url="https://api.groq.com/openai/v1",
                     api_key=st.secrets["GROQ_API_KEY"]
                 )
                 
-                # '실수' 콘셉트 중심의 고도화된 시스템 프롬프트 (이 긴 내용이 들어가야 작동한다!)
+                # 철학 용어는 철저히 숨기고, 실수 유형에 따른 동적 생성 지침을 명시한 시스템 프롬프트
                 system_prompt = """
                 너는 초등학생들이 학교생활과 공부 중에 저지른 '실수'를 성장의 비타민으로 바꿔주는 '위풍당당 실수 연구소장 AI'야.
                 
-                니체의 '아모르 파티(Amor Fati)' 정신에 따라, 아이가 자신의 실수를 부끄러워하거나 숨기지 않고 "이 실수가 나를 더 강하게 만들 거야!"라며 당당하게 긍정하도록 유도해줘.
-                또한 들뢰즈의 '리좀(Rhizome)' 관점을 적용해서, 학교가 정한 '단 하나의 정답 경로'에서 미끄러진 아이의 실수를 '생각이 사방으로 뻗어 나가는 창의적인 오작동이자 새로운 탐험'으로 재해석해 주어야 해.
+                [핵심 가치 지도 철학 (주의: '아모르 파티', '리좀' 이라는 단어는 답변에 절대 직접 노출하지 말 것)]
+                1. 운명애의 관점: 아이가 자신의 실수를 부끄러워하거나 숨기지 않고, "이 실수가 나를 더 단단하게 성장시킬 멋진 계기야!"라며 스스로를 당당하게 긍정하도록 마음을 어루만져줘.
+                2. 다양성과 탈중심화 관점: 학교가 정한 '단 하나의 정답 경로'에서 미끄러진 아이의 실수를 절대 '틀린 것'이나 '실패'로 규정하지 말고, '생각이 사방으로 자유롭게 뻗어 나가는 창의적인 오작동이자 가치 있는 탐험'으로 따뜻하게 재해석해 주어야 해.
                 
                 [답변 작성 규칙]
-                1. 대상 독자: 초등학교 3~6학년 어린이가 읽고 바로 이해할 수 있도록 친근하고 다정하면서도 유머러스한 격려조를 유지할 것.
-                2. 금지 사항: 절대로 꼰대처럼 훈계하거나, "다음엔 조심해야지?" 같은 죄책감을 주는 주입식 멘트는 절대 금지. 니체의 아모르 파티, 들뢰즈의 리좀 용어를 직접적으로 언급 절대 금지.
+                1. 대상 독자: 초등학교 3~6학년 어린이가 읽고 바로 이해할 수 있도록 친근하고 다정하면서도 재치 있는 격려조를 유지할 것.
+                2. 금지 사항: 절대로 꼰대처럼 훈계하거나, "다음엔 조심해야지?" 같은 죄책감을 주는 주입식 멘트는 절대 금지.
                 3. 필수 포함 요소 (줄글 형태로 자연스럽게 연결해서 작성):
-                   - [실수의 반전 가치]: 아이가 입력한 실수가 왜 '바보 같은 짓'이 아니라 '뇌가 열심히 일하다가 생긴 멋진 탐험 흔적'인지 철학적으로 칭찬 및 해석.
-                   - [나만의 행동 지침 3가지]: 아이가 앞으로 같은 상황에서 주체적으로 실천할 수 있는 재미있고 독창적인 이름의 해결책을 3가지 제안. 이때, 이 해결책은 실수에 걸맞게 대응되어야 하며, 구체적인 행동을 필수적으로 유도할 것. 
+                   - [실수의 반전 가치]: 아이가 입력한 실수가 왜 '바보 같은 짓'이 아니라 '뇌가 열심히 새로운 길을 탐험하다가 생긴 멋진 발자국'인지 따뜻하게 해석 및 응원.
+                   - [나만의 행동 지침 3가지]: 아이가 입력한 구체적인 실수 유형과 내용(수학, 국어, 사회, 친구 관계 등)에 완벽하게 일치하는 실시간 맞춤형 해결책 3가지를 제안해줘. (고정된 이름을 쓰지 말고, 아이의 상황에 맞춰 '~~ 법칙', '~~ 마법', '~~ 돋보기' 처럼 초등학생이 좋아할 만한 기발하고 창의적인 이름을 실시간으로 지어서 제안할 것).
+                """
                 
                 user_content = f"이름: {student_name}\n분류: {category}\n실수 기술: {error_details}"
                 
-                # 무료 고성능 모델인 llama-3.1-8b-instant로 호출!
+                # 무료 고성능 모델인 llama-3.1-8b-instant로 호출
                 response = client.chat.completions.create(
                     model="llama-3.1-8b-instant",
                     messages=[
@@ -93,22 +95,23 @@ if submit_btn:
                 # 5. 연구소 분석 인증서 피드백 출력
                 st.success("분석 완료! 당신의 실수는 성장의 시작점입니다.")
                 
-                st.markdown(f"""
-                    <div class="cert-box">
-                        <div class="cert-title">📜 위풍당당 실수 분석 인증서</div>
-                        <p><b>연구원 성명:</b> {student_name} 어린이</p>
-                        <p><b>등록된 실수 마당:</b> {category}</p>
-                        <hr style="border: 1px dashed #2E5A44;">
-                        <div style="text-align: left; white-space: pre-wrap; line-height: 1.7; color: #2C3E50; padding: 10px 5px;">
-                            {ai_analysis}
-                        </div>
-                        <hr style="border: 1px dashed #2E5A44;">
-                        <p style="margin-top: 20px; font-weight: bold; color: #2E5A44; font-size: 13pt;">"실수는 틀린 것이 아니라, 새로운 길을 발견한 것입니다."</p>
-                        <p style="font-size: 13px; color: #7F8C8D; margin-top: 8px;">위풍당당 실수 연구소 | 소장 AI 배상</p>
-                    </div>
-                """, unsafe_allow_html=True)
-                
+                # 정렬된 HTML 박스 구간
+                cert_html = f"""
+<div class="cert-box">
+    <div class="cert-title">📜 위풍당당 실수 분석 인증서</div>
+    <p><b>연구원 성명:</b> {student_name} 어린이</p>
+    <p><b>등록된 실수 마당:</b> {category}</p>
+    <hr style="border: 1px dashed #2E5A44;">
+    <div style="text-align: left; white-space: pre-wrap; line-height: 1.7; color: #2C3E50; padding: 10px 5px;">
+{ai_analysis}
+    </div>
+    <hr style="border: 1px dashed #2E5A44;">
+    <p style="margin-top: 20px; font-weight: bold; color: #2E5A44; font-size: 13pt;">"실수는 틀린 것이 아니라, 새로운 길을 발견한 것입니다."</p>
+    <p style="font-size: 13px; color: #7F8C8D; margin-top: 8px;">위풍당당 실수 연구소 | 소장 AI 배상</p>
+</div>
+"""
+                st.markdown(cert_html, unsafe_allow_html=True)
                 st.balloons()
                 
             except Exception as e:
-                st.error(f"에러 발생! Secrets 설정이나 API 키를 확인해봐: {e}")
+                st.error(f"에러 발생! Secrets 설정이나 API 키를 확인해봐, 어이: {e}")
