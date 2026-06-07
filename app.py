@@ -16,12 +16,11 @@ st.markdown("""
 st.markdown('<div class="main-title">🎓 위풍당당 실수 연구소 (The Art of Mistake)</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">나의 실수를 당당하게 긍정하고(Amor Fati), 자신만의 성장 경로(Rhizome)를 탐색하는 교실</div>', unsafe_allow_html=True)
 
-# 2. 사이드바 API 키 입력 설정 (Groq 키를 받도록 변경)
+# 2. 사이드바 API 키 입력 설정 (이제 키 입력창을 없애고 설명만 남긴다!)
 with st.sidebar:
     st.header("🔑 시스템 설정")
-    api_key = st.text_input("Groq API Key를 입력하세요", type="password")
+    st.success("시스템 API Key가 안전하게 연동되어 있습니다.")
     st.info("이 프로그램은 완전히 무료인 Llama-3.1 모델을 기반으로 구동됩니다.")
-    st.markdown("[여기서 무료 API Key 발급받기](https://console.groq.com)")
 
 # 3. 학생 친화적 입력 폼 인터페이스
 st.subheader("📝 오늘의 실수 등록하기")
@@ -53,19 +52,18 @@ submit_btn = st.button("실수 연구소에 가치 분석 요청하기 🚀")
 
 # 4. 인문학적 프롬프트 연동 및 생성 로직
 if submit_btn:
-    if not api_key:
-        st.warning("사이드바에 Groq API Key를 먼저 입력해야 작동한다니까, 어이!")
-    elif not student_name or not error_details:
+    if not student_name or not error_details:
         st.warning("이름이랑 실수를 마주한 상황을 빈칸 없이 입력해줘!")
     else:
         with st.spinner("연구소장 AI가 당신의 실수를 위대한 자산으로 재해석하는 중..."):
             try:
-                # OpenAI 라이브러리를 그대로 쓰되, 주소(base_url)만 무료 서버로 우회!
+                # 사이드바 입력창 대신 streamlit의 비밀 금고(secrets)에서 키를 자동으로 꺼내온다!
                 client = OpenAI(
                     base_url="https://api.groq.com/openai/v1",
-                    api_key=api_key
+                    api_key=st.secrets["GROQ_API_KEY"]
                 )
                 
+                # '실수' 콘셉트 중심의 고도화된 시스템 프롬프트 (이 긴 내용이 들어가야 작동한다!)
                 system_prompt = """
                 너는 초등학생들이 학교생활과 공부 중에 저지른 '실수'를 성장의 비타민으로 바꿔주는 '위풍당당 실수 연구소장 AI'야.
                 
@@ -82,7 +80,7 @@ if submit_btn:
                 
                 user_content = f"이름: {student_name}\n분류: {category}\n실수 기술: {error_details}"
                 
-                # 모델만 무료 고성능 모델인 llama-3.1-8b-instant로 교체
+                # 무료 고성능 모델인 llama-3.1-8b-instant로 호출!
                 response = client.chat.completions.create(
                     model="llama-3.1-8b-instant",
                     messages=[
@@ -115,4 +113,4 @@ if submit_btn:
                 st.balloons()
                 
             except Exception as e:
-                st.error(f"에러 발생! 키가 유효한지 확인해봐, 어이: {e}")
+                st.error(f"에러 발생! Secrets 설정이나 API 키를 확인해봐: {e}")
