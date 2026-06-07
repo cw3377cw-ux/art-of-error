@@ -16,24 +16,33 @@ st.markdown("""
 st.markdown('<div class="main-title">🎓 위풍당당 실수 연구소 (The Art of Mistake)</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">나의 실수를 당당하게 긍정하고(Amor Fati), 자신만의 성장 경로(Rhizome)를 탐색하는 교실</div>', unsafe_allow_html=True)
 
-# 2. 사이드바 API 키 입력 설정
+# 2. 사이드바 API 키 입력 설정 (Groq 키를 받도록 변경)
 with st.sidebar:
     st.header("🔑 시스템 설정")
-    api_key = st.text_input("OpenAI API Key를 입력하세요", type="password")
-    st.info("이 프로그램은 GPT-4o-mini 모델을 기반으로 구동됩니다.")
+    api_key = st.text_input("Groq API Key를 입력하세요", type="password")
+    st.info("이 프로그램은 완전히 무료인 Llama-3.1 모델을 기반으로 구동됩니다.")
+    st.markdown("[여기서 무료 API Key 발급받기](https://console.groq.com)")
 
 # 3. 학생 친화적 입력 폼 인터페이스
 st.subheader("📝 오늘의 실수 등록하기")
 student_name = st.text_input("당신의 멋진 이름(또는 별명)을 적어주세요!", placeholder="예: 홍길동")
 
-category = st.selectbox(
+# 선택지에 '기타 (직접 입력)'를 추가했다
+category_choice = st.selectbox(
     "오늘 교실이나 공부 중에 어떤 실수를 마주했나요?",
     ["수학/연산 실수 (기호 혼동, 계산 미스 등)", 
      "국어/지문 오해 (문제를 잘못 읽음 등)", 
      "사회/과학 개념 혼동 (아리송한 낱말 등)", 
      "수행평가 및 조별 과제 중 아쉬운 실수", 
-     "친구 관계 및 학급 생활 속 행동 실수"]
+     "친구 관계 및 학급 생활 속 행동 실수",
+     "기타 (직접 입력)"]
 )
+
+# 사용자가 '기타 (직접 입력)'를 선택했을 때만 입력창이 나타나는 마법!
+if category_choice == "기타 (직접 입력)":
+    category = st.text_input("어떤 종류의 실수인지 간단하게 써주세요 (예: 청소 시간 실수, 준비물 깜빡 등)", placeholder="여기에 실수의 종류를 입력하세요")
+else:
+    category = category_choice
 
 error_details = st.text_area(
     "저지른 실수나 당시의 상황을 솔직하게 나누어 주세요.",
@@ -45,15 +54,18 @@ submit_btn = st.button("실수 연구소에 가치 분석 요청하기 🚀")
 # 4. 인문학적 프롬프트 연동 및 생성 로직
 if submit_btn:
     if not api_key:
-        st.warning("사이드바에 OpenAI API Key를 먼저 입력해야 작동한다니까, 어이!")
+        st.warning("사이드바에 Groq API Key를 먼저 입력해야 작동한다니까, 어이!")
     elif not student_name or not error_details:
         st.warning("이름이랑 실수를 마주한 상황을 빈칸 없이 입력해줘!")
     else:
         with st.spinner("연구소장 AI가 당신의 실수를 위대한 자산으로 재해석하는 중..."):
             try:
-                client = OpenAI(api_key=api_key)
+                # OpenAI 라이브러리를 그대로 쓰되, 주소(base_url)만 무료 서버로 우회!
+                client = OpenAI(
+                    base_url="https://api.groq.com/openai/v1",
+                    api_key=api_key
+                )
                 
-                # '실수' 콘셉트 중심의 고도화된 시스템 프롬프트
                 system_prompt = """
                 너는 초등학생들이 학교생활과 공부 중에 저지른 '실수'를 성장의 비타민으로 바꿔주는 '위풍당당 실수 연구소장 AI'야.
                 
@@ -70,8 +82,9 @@ if submit_btn:
                 
                 user_content = f"이름: {student_name}\n분류: {category}\n실수 기술: {error_details}"
                 
+                # 모델만 무료 고성능 모델인 llama-3.1-8b-instant로 교체
                 response = client.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="llama-3.1-8b-instant",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_content}
@@ -102,4 +115,4 @@ if submit_btn:
                 st.balloons()
                 
             except Exception as e:
-                st.error(f"에러 발생! API 키 유효성이나 네트워크를 확인해봐: {e}")
+                st.error(f"에러 발생! 키가 유효한지 확인해봐, 어이: {e}")
