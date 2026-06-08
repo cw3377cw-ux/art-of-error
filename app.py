@@ -23,7 +23,7 @@ with st.sidebar:
     st.success("시스템 API Key가 안전하게 연동되어 있습니다.")
     st.info("이 프로그램은 완전히 무료인 고성능 Llama-3.1 모델을 기반으로 구동됩니다.")
 
-# 3. 세션 상태 초기화 (인터랙티브 단계 제어용)
+# 3. 세션 상태 초기화 (인터랙티브 단계 제어 및 달력 추적용)
 if "step" not in st.session_state:
     st.session_state.step = 1
 if "ai_analysis" not in st.session_state:
@@ -34,6 +34,11 @@ if "category" not in st.session_state:
     st.session_state.category = ""
 if "final_choice" not in st.session_state:
     st.session_state.final_choice = ""
+
+days = ["월", "화", "수", "목", "금", "토", "일"]
+for day in days:
+    if f"cal_{day}" not in st.session_state:
+        st.session_state[f"cal_{day}"] = False
 
 # ================= [ STEP 1: 아동 친화적 입력 화면 ] =================
 if st.session_state.step == 1:
@@ -75,23 +80,28 @@ if st.session_state.step == 1:
                         api_key=st.secrets["GROQ_API_KEY"]
                     )
                     
-                    # 100% 자연스러운 초등 맞춤형 동적 생성 시스템 프롬프트 (철학 용어 전면 은닉)
+                    # 영어권 번역체 및 훈계 말투를 원천 차단한 초등 맞춤형 시스템 프롬프트 (철학 용어 전면 은닉)
                     system_prompt = """
-                    너는 초등학생들이 학교생활과 공부 중에 저지른 '실수'를 성장의 비타민으로 바꿔주는 다정하고 유쾌한 '위풍당당 실수 연구소장 AI'야.
+                    너는 초등학생이 학교에서 저지른 실수를 따뜻하게 위로하고 성장의 원동력으로 바꿔주는 다정하고 유쾌한 '초등학교 담임 선생님'이자 '실수 연구소장 AI'야.
                     
-                    [핵심 가치 지도 철학 (주의: '아모르 파티', '리좀' 이라는 단어는 답변에 절대 직접 노출하지 말 것)]
-                    1. 운명애의 관점: 아이가 실수를 부끄러워하거나 숨기지 않고, "이 실수가 나를 더 단단하게 성장시킬 멋진 계기야!"라며 스스로를 당당하게 긍정하도록 마음을 촉촉하게 어루만져줘.
-                    2. 다양성과 탈중심화 관점: 학교가 정한 '단 하나의 정답 경로'에서 미끄러진 아이의 실수를 절대 '틀린 것'이나 '실패'로 규정하지 말고, '생각이 사방으로 자유롭게 뻗어 나가는 창의적인 오작동이자 가치 있는 탐험'으로 따뜻하게 재해석해 주어야 해.
+                    [가장 중요한 규칙: 영어 번역체 및 서양 철학 문체 절대 금지]
+                    - "~하는 대신 ~해라", "~하는 과정을 통해 ~을 얻었다", "~을 당당하게 긍정하도록 해라" 같은 딱딱한 서양 번역투 문장은 절대 쓰지 마.
+                    - "~했구나!", "~해보는 건 어떨까?", "~해보자!" 처럼 실제 한국의 초등학교 교실에서 다정한 선생님이 아이에게 조근조근 말하는 100% 자연스러운 구어체로만 대답해줘.
                     
-                    [답변 작성 규칙 - 부자연스러운 말투 전면 수정]
-                    1. 대상 독자: 초등학교 3~6학년 어린이가 읽고 바로 감동받거나 웃을 수 있도록 친근하고 다정하면서도 칭찬을 아끼지 않는 격려조를 유지해줘.
-                    2. 금지 사항: "~하는 대신 ~해라", "~하지 말고 ~하자" 같은 번역기 말투나 앞뒤 문맥이 꼬이는 문장은 절대 금지. "~야", "~해보는 건 어떨까?", "~해보자!" 같은 자연스러운 구어체로 작성할 것. "이채운아, 넌~" 처럼 기계적으로 이름을 반복하며 훈계하지 마.
-                    3. 필수 포함 요소 (구조를 명확히 나누어 줄바꿈할 것):
-                       - [실수의 반전 가치]: 아이가 입력한 구체적인 실수를 바탕으로, 왜 그 행동이 '뇌가 엄청 열심히 새로운 길을 탐험하다 생긴 멋진 발자국'인지 인문학적으로 칭찬 및 해석해줘.
-                       - [나만의 행동 지침 3가지]: 아이가 입력한 실수 내용(수학, 국어, 친구 관계 등)에 100% 매칭되는 독창적인 해결책 3가지를 제안해줘. 고정된 예시를 쓰지 말고, 아이의 구체적인 상황을 바탕으로 아래 3가지 성향에 맞는 기발한 이름을 실시간으로 작명해서 자연스러운 행동 요령을 적어줘.
-                         * 🔵 [정면 돌파형 기사] (실수를 정면으로 부딪쳐 해결하는 멋진 미션 제안)
-                         * 🟢 [침착한 마법사] (마음을 가라앉히고 풀이 과정이나 감정을 다스리는 조용한 미션 제안)
-                         * 🟣 [생각 돋보기 탐험가] (실수를 통해 발견한 새로운 생각이나 재미를 즐기는 창의적 미션 제안)
+                    [핵심 가치 지도 철학 (주의: '아모르 파티', '리좀' 단어는 절대 답변에 노출 금지)]
+                    1. 운명애: 실수를 부끄러워하거나 자책하지 않고, "이 실수가 나를 더 단단하게 성장시킬 멋진 계기야!"라며 스스로를 당당하게 믿도록 어루만져 줄 것.
+                    2. 다양성: 정답에서 미끄러진 아이의 행동을 '틀린 것'이나 '실패'라고 하지 말고, '생각이 사방으로 자유롭게 뻗어 나가는 창의적인 탐험'으로 따뜻하게 재해석할 것.
+                    
+                    [답변 작성 구조 - 아래 양식을 엄격히 지켜서 줄바꿈할 것]
+                    
+                    🌱 [소장님의 따뜻한 한마디]
+                    (여기에는 아이가 적은 구체적인 실수 내용을 바탕으로, "채운아, ~했구나! 속상했겠네"라며 공감을 먼저 해줘. 그 다음 왜 그 실수가 '뇌가 열심히 새로운 길을 탐험하다 생긴 멋진 발자국'인지 완전히 자연스러운 한국어 줄글로 칭찬과 위로를 적어줘. 기계적인 이름 반복은 금지야.)
+                    
+                    🧭 [나만의 주체적인 행동 지침 3가지]
+                    (아이의 구체적인 실수 상황에 100% 딱 들어맞는 기발한 해결책 3가지를 실시간으로 창작해줘. 기계적인 템플릿 문장을 쓰지 말고, 아이가 당장 내일부터 교실에서 실천할 수 있는 재미있는 행동 요령을 다정하게 제안해줘.)
+                    - 🔵 [정면 돌파형 기사] (실수를 씩씩하게 마주하고 해결하는 멋진 미션)
+                    - 🟢 [침착한 마법사] (마음을 차분하게 가라앉히고 풀이 과정이나 감정을 다스리는 조용한 미션)
+                    - 🟣 [생각 돋보기 탐험가] (실수를 통해 발견한 새로운 생각이나 재미를 즐기는 창의적인 미션)
                     """
                     
                     user_content = f"이름: {student_name}\n분류: {category}\n실수 기술: {error_details}"
@@ -148,7 +158,7 @@ elif st.session_state.step == 2:
             st.session_state.step = 3
             st.rerun()
 
-# ================= [ STEP 3: 최종 실수 분석 인증서 발행 ] =================
+# ================= [ STEP 3: 최종 실수 분석 인증서 및 시각적 달력 챌린지 ] =================
 elif st.session_state.step == 3:
     st.success("축하합니다! 자신만의 주체적인 성장 경로를 결정하셨습니다.")
     
@@ -170,6 +180,62 @@ elif st.session_state.step == 3:
     st.markdown(cert_html, unsafe_allow_html=True)
     st.balloons()
     
-    if st.button("처음으로 돌아가기 🔄"):
+    # 명시적 시각화 달력 보드 시작
+    st.markdown("---")
+    st.subheader("📅 나만의 비밀 퀘스트 주간 달력")
+    st.info("소장님이 주신 미션을 오늘 진짜로 지켰나요? 요일별 도장을 꾹 눌러서 초록색 성장 잔디를 심어보세요!")
+    
+    # 7열 달력 격자(Grid) 디자인 배치
+    cols = st.columns(7)
+    success_count = 0
+    
+    for i, day in enumerate(days):
+        with cols[i]:
+            # 성공 여부에 따라 달력 칸의 배경 색상을 다르게 보여주는 HTML 트릭
+            if st.session_state[f"cal_{day}"]:
+                success_count += 1
+                st.markdown(f"""
+                    <div style="background-color: #2E5A44; color: white; border-radius: 8px; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 5px;">
+                        {day}<br>🌱
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                    <div style="background-color: #EAEDED; color: #7F8C8D; border-radius: 8px; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 5px;">
+                        {day}<br>⚪
+                    </div>
+                """, unsafe_allow_html=True)
+            
+            # 달력 칸 바로 밑에 토글 버튼 배치
+            if st.session_state[f"cal_{day}"]:
+                if st.button("취소", key=f"btn_undo_{day}"):
+                    st.session_state[f"cal_{day}"] = False
+                    st.rerun()
+            else:
+                if st.button("실천!", key=f"btn_do_{day}"):
+                    st.session_state[f"cal_{day}"] = True
+                    st.rerun()
+
+    # 주간 성찰 통계 리포트 (게이지 바 시각화)
+    st.markdown("### 📈 주간 성찰 통계")
+    progress_percentage = int((success_count / 7) * 100)
+    
+    st.progress(success_count / 7)
+    st.markdown(f"**현재 주간 미션 실천율:** `{progress_percentage}%` ({success_count} / 7일 성공)")
+    
+    # 달성도에 따른 동적 피드백
+    if success_count == 7:
+        st.snow()
+        st.success("🎉 대박! 일주일 성장 달력을 푸른 잔디로 가득 채우셨군요! 최고의 하루하루였습니다! 👑")
+    elif success_count >= 4:
+        st.info("✨ 벌써 일주일의 절반 이상을 성공했네요! 생각이 무럭무럭 자라는 소리가 들립니다.")
+            
+    # 처음으로 돌아가기 버튼
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("새로운 실수 등록하기 🔄", key="reset_all_btn"):
+        # 요일 세션만 깔끔히 비우고 복귀
+        for day in days:
+            if f"cal_{day}" in st.session_state:
+                del st.session_state[f"cal_{day}"]
         st.session_state.step = 1
         st.rerun()
