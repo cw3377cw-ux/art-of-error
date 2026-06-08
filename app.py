@@ -1,7 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 
-# 1. 페이지 기본 설정 및 아카데믹 그린 스타일 셋업 (영문 타이틀 완벽 제거)
+# 1. 페이지 기본 설정 및 디자인 셋업
 st.set_page_config(page_title="위풍당당 실수 연구소", page_icon="🎓", layout="centered")
 
 st.markdown("""
@@ -11,19 +11,14 @@ st.markdown("""
     .cert-box { border: 5px double #2E5A44; padding: 30px; background-color: #FAFBFB; border-radius: 10px; text-align: center; margin-top: 20px; }
     .cert-title { font-size: 24px; font-weight: bold; color: #1E3D2F; margin-bottom: 20px; letter-spacing: 2px; }
     .quest-box { background-color: #EEF7F2; border: 1px solid #CCE7D9; padding: 20px; border-radius: 8px; margin-top: 15px; }
+    .past-box { background-color: #FFF9E6; border: 1px solid #F39C12; padding: 15px; border-radius: 8px; margin-top: 10px; color: #7F8C8D; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="main-title">🎓 위풍당당 실수 연구소</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">나의 실수를 당당하게 긍정하고, 자신만의 성장 경로를 탐색하는 교실</div>', unsafe_allow_html=True)
 
-# 2. 사이드바 설정 (Secrets 금고 연동 안내)
-with st.sidebar:
-    st.header("🔑 시스템 설정")
-    st.success("시스템 API Key가 안전하게 연동되어 있습니다.")
-    st.info("이 프로그램은 완전히 무료인 고성능 Llama-3.1 모델을 기반으로 구동됩니다.")
-
-# 3. 세션 상태 초기화 (인터랙티브 단계 제어 및 달력 추적용)
+# 2. 세션 상태 초기화 (타임머신 기억 저장소 추가)
 if "step" not in st.session_state:
     st.session_state.step = 1
 if "ai_analysis" not in st.session_state:
@@ -34,11 +29,30 @@ if "category" not in st.session_state:
     st.session_state.category = ""
 if "final_choice" not in st.session_state:
     st.session_state.final_choice = ""
+if "past_errors" not in st.session_state:
+    st.session_state.past_errors = [] # 과거 실수를 기억할 저장소 타임머신!
 
 days = ["월", "화", "수", "목", "금", "토", "일"]
 for day in days:
     if f"cal_{day}" not in st.session_state:
         st.session_state[f"cal_{day}"] = False
+
+# 3. 사이드바 설정 (타임머신 성찰 콘텐츠 배치)
+with st.sidebar:
+    st.header("🔑 시스템 설정")
+    st.success("시스템 API Key 연동 완료")
+    
+    # 만약 과거에 등록한 실수가 있다면 사이드바에 '비밀 편지함'이 열린다!
+    if st.session_state.past_errors:
+        st.markdown("---")
+        st.header("📬 소장님의 비밀 편지함")
+        st.warning("타임머신 도착! 과거의 내가 보낸 실수가 축적되어 있습니다.")
+        for idx, past in enumerate(st.session_state.past_errors):
+            with st.expander(f"📌 {idx+1}번째 기록 성찰하기"):
+                st.markdown(f"**연구원:** {past['name']}")
+                st.markdown(f"**실수 마당:** {past['cat']}")
+                st.caption(f"당시 상황: {past['details']}")
+                st.markdown("<div class='past-box'><b>🌱 오늘의 성찰 한마디:</b> 이때의 실수는 지금 나에게 어떤 단단한 지혜가 되었나요? 스스로를 대견하게 안아주세요!</div>", unsafe_allow_html=True)
 
 # ================= [ STEP 1: 아동 친화적 입력 화면 ] =================
 if st.session_state.step == 1:
@@ -55,7 +69,6 @@ if st.session_state.step == 1:
          "기타 (직접 입력)"]
     )
 
-    # 기타 선택 시 직접 입력창 노출
     if category_choice == "기타 (직접 입력)":
         category = st.text_input("어떤 종류의 실수인지 간단하게 써주세요", placeholder="예: 우유 급식 실수를 했어요")
     else:
@@ -74,13 +87,8 @@ if st.session_state.step == 1:
         else:
             with st.spinner("연구소장 AI가 당신의 실수를 위대한 자산으로 재해석하는 중..."):
                 try:
-                    # 비밀 금고(Secrets)에서 Groq API 키를 안전하게 호출
-                    client = OpenAI(
-                        base_url="https://api.groq.com/openai/v1",
-                        api_key=st.secrets["GROQ_API_KEY"]
-                    )
+                    client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=st.secrets["GROQ_API_KEY"])
                     
-                    # 영어권 번역체 및 훈계 말투를 원천 차단한 초등 맞춤형 시스템 프롬프트 (철학 용어 전면 은닉)
                     system_prompt = """
                     너는 초등학생이 학교에서 저지른 실수를 따뜻하게 위로하고 성장의 원동력으로 바꿔주는 다정하고 유쾌한 '초등학교 담임 선생님'이자 '실수 연구소장 AI'야.
                     
@@ -95,10 +103,10 @@ if st.session_state.step == 1:
                     [답변 작성 구조 - 아래 양식을 엄격히 지켜서 줄바꿈할 것]
                     
                     🌱 [소장님의 따뜻한 한마디]
-                    (여기에는 아이가 적은 구체적인 실수 내용을 바탕으로, "채운아, ~했구나! 속상했겠네"라며 공감을 먼저 해줘. 그 다음 왜 그 실수가 '뇌가 열심히 새로운 길을 탐험하다 생긴 멋진 발자국'인지 완전히 자연스러운 한국어 줄글로 칭찬과 위로를 적어줘. 기계적인 이름 반복은 금지야.)
+                    (여기에는 아이가 적은 구체적인 실수 내용을 바탕으로, 공감을 먼저 해주고 왜 그 실수가 '뇌가 열심히 새로운 길을 탐험하다 생긴 멋진 발자국'인지 완전히 자연스러운 한국어 줄글로 칭찬과 위로를 적어줘.)
                     
                     🧭 [나만의 주체적인 행동 지침 3가지]
-                    (아이의 구체적인 실수 상황에 100% 딱 들어맞는 기발한 해결책 3가지를 실시간으로 창작해줘. 기계적인 템플릿 문장을 쓰지 말고, 아이가 당장 내일부터 교실에서 실천할 수 있는 재미있는 행동 요령을 다정하게 제안해줘.)
+                    (아이의 구체적인 실수 상황에 100% 딱 들어맞는 기발한 해결책 3가지를 실시간으로 창작해줘. 아이가 당장 내일부터 교실에서 실천할 수 있는 재미있는 행동 요령을 제안해줘.)
                     - 🔵 [정면 돌파형 기사] (실수를 씩씩하게 마주하고 해결하는 멋진 미션)
                     - 🟢 [침착한 마법사] (마음을 차분하게 가라앉히고 풀이 과정이나 감정을 다스리는 조용한 미션)
                     - 🟣 [생각 돋보기 탐험가] (실수를 통해 발견한 새로운 생각이나 재미를 즐기는 창의적인 미션)
@@ -108,16 +116,17 @@ if st.session_state.step == 1:
                     
                     response = client.chat.completions.create(
                         model="llama-3.1-8b-instant",
-                        messages=[
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_content}
-                        ],
+                        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_content}],
                         temperature=0.7
                     )
                     
                     raw_text = response.choices[0].message.content
                     
-                    # 데이터를 세션 상태에 저장하고 다음 스텝으로 이동
+                    # 과거 저장소에 현재 기록 노적 누적 시키기 (타임머신 칩셋 작동)
+                    st.session_state.past_errors.append({
+                        "name": student_name, "cat": category, "details": error_details
+                    })
+                    
                     st.session_state.ai_analysis = raw_text
                     st.session_state.student_name = student_name
                     st.session_state.category = category
@@ -125,13 +134,12 @@ if st.session_state.step == 1:
                     st.rerun()
                     
                 except Exception as e:
-                    st.error(f"에러 발생! Secrets 설정이나 API 키를 확인해봐, 어이: {e}")
+                    st.error(f"에러 발생! Secrets 설정을 확인해봐, 어이: {e}")
 
 # ================= [ STEP 2: 인터랙티브 성장의 갈래 선택 화면 ] =================
 elif st.session_state.step == 2:
     st.subheader(f"🎓 {st.session_state.student_name} 연구원님을 위한 맞춤형 분석 완료!")
     
-    # 1단계 AI 분석 리포트 출력 (HTML 격리로 들여쓰기 에러 차단)
     st.markdown(f"""
 <div class="cert-box" style="text-align: left;">
     <div class="cert-title" style="text-align: center;">🔬 실수의 가치 재해석</div>
@@ -162,7 +170,6 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     st.success("축하합니다! 자신만의 주체적인 성장 경로를 결정하셨습니다.")
     
-    # 완성된 상장 형태의 인증서 출력
     cert_html = f"""
 <div class="cert-box">
     <div class="cert-title">📜 위풍당당 실수 분석 인증서</div>
@@ -180,33 +187,22 @@ elif st.session_state.step == 3:
     st.markdown(cert_html, unsafe_allow_html=True)
     st.balloons()
     
-    # 명시적 시각화 달력 보드 시작
+    # 주간 달력 보드 시작
     st.markdown("---")
     st.subheader("📅 나만의 비밀 퀘스트 주간 달력")
-    st.info("소장님이 주신 미션을 오늘 진짜로 지켰나요? 요일별 도장을 꾹 눌러서 초록색 성장 잔디를 심어보세요!")
+    st.info("요일별 도장을 꾹 눌러서 초록색 성장 잔디를 심어보세요!")
     
-    # 7열 달력 격자(Grid) 디자인 배치
     cols = st.columns(7)
     success_count = 0
     
     for i, day in enumerate(days):
         with cols[i]:
-            # 성공 여부에 따라 달력 칸의 배경 색상을 다르게 보여주는 HTML 트릭
             if st.session_state[f"cal_{day}"]:
                 success_count += 1
-                st.markdown(f"""
-                    <div style="background-color: #2E5A44; color: white; border-radius: 8px; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 5px;">
-                        {day}<br>🌱
-                    </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div style="background-color: #2E5A44; color: white; border-radius: 8px; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 5px;">{day}<br>🌱</div>', unsafe_allow_html=True)
             else:
-                st.markdown(f"""
-                    <div style="background-color: #EAEDED; color: #7F8C8D; border-radius: 8px; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 5px;">
-                        {day}<br>⚪
-                    </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div style="background-color: #EAEDED; color: #7F8C8D; border-radius: 8px; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 5px;">{day}<br>⚪</div>', unsafe_allow_html=True)
             
-            # 달력 칸 바로 밑에 토글 버튼 배치
             if st.session_state[f"cal_{day}"]:
                 if st.button("취소", key=f"btn_undo_{day}"):
                     st.session_state[f"cal_{day}"] = False
@@ -216,26 +212,17 @@ elif st.session_state.step == 3:
                     st.session_state[f"cal_{day}"] = True
                     st.rerun()
 
-    # 주간 성찰 통계 리포트 (게이지 바 시각화)
     st.markdown("### 📈 주간 성찰 통계")
     progress_percentage = int((success_count / 7) * 100)
-    
     st.progress(success_count / 7)
     st.markdown(f"**현재 주간 미션 실천율:** `{progress_percentage}%` ({success_count} / 7일 성공)")
     
-    # 달성도에 따른 동적 피드백
     if success_count == 7:
         st.snow()
         st.success("🎉 대박! 일주일 성장 달력을 푸른 잔디로 가득 채우셨군요! 최고의 하루하루였습니다! 👑")
-    elif success_count >= 4:
-        st.info("✨ 벌써 일주일의 절반 이상을 성공했네요! 생각이 무럭무럭 자라는 소리가 들립니다.")
             
-    # 처음으로 돌아가기 버튼
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("새로운 실수 등록하기 🔄", key="reset_all_btn"):
-        # 요일 세션만 깔끔히 비우고 복귀
-        for day in days:
-            if f"cal_{day}" in st.session_state:
-                del st.session_state[f"cal_{day}"]
+        # 요일 상태는 그대로 유지하여 성찰하게 하고, 스텝만 이동!
         st.session_state.step = 1
         st.rerun()
