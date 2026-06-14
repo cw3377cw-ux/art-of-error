@@ -22,7 +22,7 @@ st.markdown("""
 st.markdown('<div class="main-title">🎓 위풍당당 실수 연구소</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">나의 실수를 당당하게 반겨주고, 나만의 새로운 성장 길을 찾아가는 교실</div>', unsafe_allow_html=True)
 
-# 2. 기억 저장소 초기화 (개인 화면 기억용 세션 유지)
+# 2. 기억 저장소 초기화 (세션 유지)
 if "step" not in st.session_state: st.session_state.step = 1
 if "ai_analysis" not in st.session_state: st.session_state.ai_analysis = ""
 if "student_name" not in st.session_state: st.session_state.student_name = ""
@@ -37,7 +37,7 @@ for day in days:
     if f"cal_{day}" not in st.session_state:
         st.session_state[f"cal_{day}"] = False
 
-# 3. 옆구리 메뉴창: 모드 변경 및 교사용 모음판
+# 3. 사이드바: 사용자 모드 전환
 with st.sidebar:
     st.header("⚙️ 연구소 설정")
     mode = st.radio("누구인가요?", ["학생 마당 🎒", "선생님 전용 관리 마당 👩‍🏫"])
@@ -106,11 +106,11 @@ if mode == "학생 마당 🎒":
             if name and details:
                 with st.spinner("구글 제미나이 소장님이 당신의 실수를 한국어 정서로 재해석하는 중..."):
                     try:
-                        # 구글 제미나이 API 설정 연동
+                        # 구글 제미나이 API 키 연동
                         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
                         
-                        # [최종 오류 해결 핵심]: v1beta 버전 충돌을 피하기 위해 단순 모델명인 'gemini-1.5-flash'로 완벽 교체
-                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        # [오류 해결의 핵심 필살기]: v1beta 404 에러를 방지하는 최신 표준 모델명 규격 적용
+                        model = genai.GenerativeModel(model_name='gemini-1.5-flash-latest')
                         
                         system_prompt = f"""
                         너는 초등학생이 학교에서 저지른 실수를 따뜻하게 위로하고 성장의 원동력으로 바꿔주는 다정하고 유쾌한 '초등학교 담임 선생님'이자 '실수 연구소장 AI'야.
