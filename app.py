@@ -109,8 +109,8 @@ if mode == "학생 마당 🎒":
                         # 구글 제미나이 API 설정 연동
                         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
                         
-                        # [오류 해결 포인트]: 에러를 방지하기 위해 공식 명칭인 'models/gemini-1.5-flash'로 경로 수정
-                        model = genai.GenerativeModel('models/gemini-1.5-flash')
+                        # [최종 오류 해결 핵심]: v1beta 버전 충돌을 피하기 위해 단순 모델명인 'gemini-1.5-flash'로 완벽 교체
+                        model = genai.GenerativeModel('gemini-1.5-flash')
                         
                         system_prompt = f"""
                         너는 초등학생이 학교에서 저지른 실수를 따뜻하게 위로하고 성장의 원동력으로 바꿔주는 다정하고 유쾌한 '초등학교 담임 선생님'이자 '실수 연구소장 AI'야.
