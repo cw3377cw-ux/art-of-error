@@ -1,5 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
+import requests
+import json
 import random
 
 # 1. 화면 기본 설정 및 꾸미기 (순우리말 한국어 정서 정돈)
@@ -22,7 +23,7 @@ st.markdown("""
 st.markdown('<div class="main-title">🎓 위풍당당 실수 연구소</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">나의 실수를 당당하게 반겨주고, 나만의 새로운 성장 길을 찾아가는 교실</div>', unsafe_allow_html=True)
 
-# 2. 기억 저장소 초기화 (세션 유지)
+# 2. 기억 저장소 초기화 (개인 화면 기억용 세션 유지)
 if "step" not in st.session_state: st.session_state.step = 1
 if "ai_analysis" not in st.session_state: st.session_state.ai_analysis = ""
 if "student_name" not in st.session_state: st.session_state.student_name = ""
@@ -37,7 +38,7 @@ for day in days:
     if f"cal_{day}" not in st.session_state:
         st.session_state[f"cal_{day}"] = False
 
-# 3. 사이드바: 사용자 모드 전환
+# 3. 옆구리 메뉴창: 모드 변경 및 교사용 모음판
 with st.sidebar:
     st.header("⚙️ 연구소 설정")
     mode = st.radio("누구인가요?", ["학생 마당 🎒", "선생님 전용 관리 마당 👩‍🏫"])
@@ -104,13 +105,13 @@ if mode == "학생 마당 🎒":
         
         if st.button("실수 연구소에 가치 분석 요청하기 🚀"):
             if name and details:
-                with st.spinner("구글 제미나이 소장님이 당신의 실수를 한국어 정서로 재해석하는 중..."):
+                with st.spinner("구글 서버와 직접 소통하며 실수를 한국어 정서로 재해석하는 중..."):
                     try:
-                        # 구글 제미나이 API 키 연동
-                        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+                        # 비밀 금고에서 구글 키 가져오기
+                        api_key = st.secrets["GEMINI_API_KEY"]
                         
-                        # [오류 해결의 핵심 필살기]: v1beta 404 에러를 방지하는 최신 표준 모델명 규격 적용
-                        model = genai.GenerativeModel(model_name='gemini-1.5-flash-latest')
+                        # [버전 오류 완전 해결 치트키]: 라이브러리를 거치지 않고 정식 v1 주소로 다이렉트 API 호출
+                        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
                         
                         system_prompt = f"""
                         너는 초등학생이 학교에서 저지른 실수를 따뜻하게 위로하고 성장의 원동력으로 바꿔주는 다정하고 유쾌한 '초등학교 담임 선생님'이자 '실수 연구소장 AI'야.
@@ -134,16 +135,33 @@ if mode == "학생 마당 🎒":
                         - 🟣 [여기에 이번 실수 내용에 맞게 새로 작명한 톡톡 튀는 요약 제목 세 번째] (구체적인 행동 요령 설명)
                         """
                         
-                        response = model.generate_content(system_prompt)
-                        st.session_state.ai_analysis = response.text
+                        # 표준 REST API 통신 패키지 구조 셋업
+                        headers = {'Content-Type': 'application/json'}
+                        payload = {
+                            "contents": [
+                                {
+                                    "parts": [{"text": system_prompt}]
+                                }
+                            ]
+                        }
+                        
+                        # 구글 API 서버로 직접 타격 발송
+                        response = requests.post(url, headers=headers, data=json.dumps(payload))
+                        response_json = response.json()
+                        
+                        # 결과 텍스트만 쏙 빼오기
+                        ai_text = response_json['candidates'][0]['content']['parts'][0]['text']
+                        
+                        st.session_state.ai_analysis = ai_text
                         st.session_state.student_name, st.session_state.category, st.session_state.details = name, cat, details
                         
                         # 타임머신용 과거 저장소에 누적
                         st.session_state.past_errors.append({"name": name, "cat": cat, "details": details})
                         st.session_state.step = 2
                         st.rerun()
+                        
                     except Exception as e: 
-                        st.error(f"구글 AI 서버 연결 에러! Secrets 금고에 GEMINI_API_KEY를 제대로 넣었는지 확인해봐, 어이! 오류 내용: {e}")
+                        st.error(f"구글 AI 서버 직접 연결 실패! 금고 세팅을 다시 검사해봐, 어이! 오류 내용: {e}")
             else: 
                 st.warning("이름이랑 상황을 빈칸 없이 적어줘!")
 
