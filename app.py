@@ -110,7 +110,7 @@ if mode == "학생 마당 🎒":
                         # 비밀 금고에서 구글 키 가져오기
                         api_key = st.secrets["GEMINI_API_KEY"]
                         
-                        # [버전 오류 완전 해결 치트키]: 라이브러리를 거치지 않고 정식 v1 주소로 다이렉트 API 호출
+                        # 라이브러리 우회 정식 주소 다이렉트 API 호출
                         url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
                         
                         system_prompt = f"""
@@ -135,7 +135,6 @@ if mode == "학생 마당 🎒":
                         - 🟣 [여기에 이번 실수 내용에 맞게 새로 작명한 톡톡 튀는 요약 제목 세 번째] (구체적인 행동 요령 설명)
                         """
                         
-                        # 표준 REST API 통신 패키지 구조 셋업
                         headers = {'Content-Type': 'application/json'}
                         payload = {
                             "contents": [
@@ -145,23 +144,27 @@ if mode == "학생 마당 🎒":
                             ]
                         }
                         
-                        # 구글 API 서버로 직접 타격 발송
+                        # 구글 서버로 발송
                         response = requests.post(url, headers=headers, data=json.dumps(payload))
                         response_json = response.json()
                         
-                        # 결과 텍스트만 쏙 빼오기
-                        ai_text = response_json['candidates'][0]['content']['parts'][0]['text']
-                        
-                        st.session_state.ai_analysis = ai_text
-                        st.session_state.student_name, st.session_state.category, st.session_state.details = name, cat, details
-                        
-                        # 타임머신용 과거 저장소에 누적
-                        st.session_state.past_errors.append({"name": name, "cat": cat, "details": details})
-                        st.session_state.step = 2
-                        st.rerun()
+                        # [에러 정밀 진단 시스템]: 구글 서버가 뱉은 진짜 거절 사유 파악하기
+                        if 'error' in response_json:
+                            st.error(f"❌ 구글 서버가 키 인증을 거절했습니다! 이유: {response_json['error']['message']}")
+                            st.info("💡 해결법: 스트림릿 Secrets 설정에 적어둔 AQ 열쇠가 구글 AI 스튜디오의 진짜 열쇠와 완전히 똑같은지 다시 한 번 확인해 보세요!")
+                        else:
+                            # 정상 작동할 때만 candidates 보따리를 연다.
+                            ai_text = response_json['candidates'][0]['content']['parts'][0]['text']
+                            
+                            st.session_state.ai_analysis = ai_text
+                            st.session_state.student_name, st.session_state.category, st.session_state.details = name, cat, details
+                            
+                            st.session_state.past_errors.append({"name": name, "cat": cat, "details": details})
+                            st.session_state.step = 2
+                            st.rerun()
                         
                     except Exception as e: 
-                        st.error(f"구글 AI 서버 직접 연결 실패! 금고 세팅을 다시 검사해봐, 어이! 오류 내용: {e}")
+                        st.error(f"구글 AI 서버 직접 연결 실패! 오류 내용: {e}")
             else: 
                 st.warning("이름이랑 상황을 빈칸 없이 적어줘!")
 
