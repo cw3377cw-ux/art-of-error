@@ -109,8 +109,8 @@ if mode == "학생 마당 🎒":
                     try:
                         api_key = st.secrets["GEMINI_API_KEY"]
                         
-                        # [오류 해결의 절대 필살기]: v1 정식 규격 주소에서 100% 프리패스로 통과하는 최신 플래시 모델 주소명으로 완벽 변경!
-                        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent?key={api_key}"
+                        # [오류 해결의 절대 필살기]: AQ 최신 토큰과 완벽하게 호환되는 구글 만능 API 주소창 규격으로 전면 수정!
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
                         
                         system_prompt = f"""
                         너는 초등학생이 학교에서 저지른 실수를 따뜻하게 위로하고 성장의 원동력으로 바꿔주는 다정하고 유쾌한 '초등학교 담임 선생님'이자 '실수 연구소장 AI'야.
@@ -223,14 +223,4 @@ if mode == "학생 마당 🎒":
         student_msg = st.text_input("선생님께만 전하고 싶은 각오나 마음:", placeholder="예: 선생님, 저 내일부터 뺄셈 함정 조심하기 미션 꼭 실천해 볼게요!")
         if st.button("비밀 편지 발송하기 📮"):
             if student_msg:
-                st.session_state.teacher_messages.append({"name": st.session_state.student_name, "cat": st.session_state.category, "msg": student_msg})
-                st.success("선생님 전용 모음판으로 안전하게 전송되었습니다! (사이드바 메뉴에서 즉시 확인 가능)")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("새로운 실수 등록하기 🔄", key="final_reset"):
-            st.session_state.step = 1
-            st.rerun()
-
-elif mode == "선생님 전용 관리 마당 👩‍🏫":
-    st.subheader("👩‍🏫 선생님 전용 실시간 화면")
-    st.info("← 왼쪽 사이드바 메뉴를 보시면 현재 학생들이 등록한 실시간 실수 종류 통계 게이지와 학생들이 전송한 비밀 상담 편지를 즉각 확인하실 수 있습니다.")
+                st.session_state
