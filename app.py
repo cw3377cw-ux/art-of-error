@@ -107,7 +107,6 @@ if mode == "학생 마당 🎒":
             if name and details:
                 with st.spinner("실수를 멋진 자산으로 재해석하는 중..."):
                     
-                    # 만약을 대비한 자체 내장 고품질 한글 백업 데이터 보따리 셋업 (서버 에러 방어막)
                     backup_responses = {
                         "수학 계산 실수": """🌱 [소장님의 따뜻한 한마디]
 틀린 연산 기호나 숫자는 결코 부끄러운 게 아니란다! 우리 뇌가 엄청나게 빠른 속도로 문제를 해결하려다 잠깐 발을 헛디딘 것뿐이야. 오히려 이런 사소한 틈새를 찾아내는 과정에서 수학적 사고력이 훨씬 더 깊고 단단해진단다!
@@ -134,7 +133,7 @@ if mode == "학생 마당 🎒":
 - 🟣 [개념 짝꿍 카드 찾기] 단어와 뜻을 카드로 쪼개어 맞춰보는 재미있는 놀이판을 만들어 실천해보자.""",
                         
                         "모둠 과제 중 아쉬운 실수": """🌱 [소장님의 따뜻한 한마디]
-여럿이 함께 조화를 이루며 걸어갈 때 삐걱거리는 발소리가 나는 건 너무나 자연스러운 일이야! 서로 다른 생각의 조각들이 맞물려 거대한 그림을 완성하는 멋진 과정이거든. 이 아쉬움이 다음 협력의 훌륭한 나침반이 될 거란다.
+여랫이 함께 조화를 이루며 걸어갈 때 삐걱거리는 발소리가 나는 건 너무나 자연스러운 일이야! 서로 다른 생각의 조각들이 맞물려 거대한 그림을 완성하는 멋진 과정이거든. 이 아쉬움이 다음 협력의 훌륭한 나침반이 될 거란다.
 
 🧭 [나만의 행동 지침 3가지]
 - 🔵 [마음 경청 확성기 켜기] 친구가 이야기를 할 때 고개를 세 번 끄덕이며 끝까지 들어주는 미션을 수행해보자.
@@ -150,7 +149,6 @@ if mode == "학생 마당 🎒":
 - 🟣 [비밀 정서 우체통] 내 감정을 글이나 일기로 적으며 마음의 호수를 잔잔하게 다스려보는 시간을 가져보자."""
                     }
                     
-                    # 기본 공통 백업
                     default_backup = """🌱 [소장님의 따뜻한 한마디]
 실수를 솔직하게 마주한 것 자체만으로도 너는 이미 엄청나게 멋진 어린이 연구원이야! 실수는 틀린 게 아니라 새로운 길을 발견하는 지도란다. 오늘의 성찰을 통해 한 뼘 더 단단하게 자라날 너를 소장님이 언제나 응원할게!
 
@@ -160,10 +158,7 @@ if mode == "학생 마당 🎒":
 - 🟣 [지혜의 나침반 세우기] 다음번에 비슷한 상황이 오면 삼 초만 멈춰 서서 생각하기로 나 자신과 약속해보자."""
 
                     try:
-                        # 스트림릿 금고에서 키 슥 훔쳐오기
                         api_key = st.secrets["GEMINI_API_KEY"]
-                        
-                        # 구글 v1beta 표준 주소망 호출
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
                         
                         headers = {'Content-Type': 'application/json'}
@@ -176,15 +171,12 @@ if mode == "학생 마당 🎒":
                         response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=5)
                         response_json = response.json()
                         
-                        # 정상 작동 확인 사격
                         if 'candidates' in response_json:
                             ai_text = response_json['candidates'][0]['content']['parts'][0]['text']
                         else:
-                            # 구글 서버가 튕기면 해당 카테고리 내장 백업 데이터를 비장의 카드로 제시
                             ai_text = backup_responses.get(cat, default_backup)
                             
                     except:
-                        # 인터넷 연결 끊김이나 금고 에러 등 모든 상황에서 강제로 완벽 구동
                         ai_text = backup_responses.get(cat, default_backup)
                     
                     st.session_state.ai_analysis = ai_text
@@ -249,7 +241,8 @@ if mode == "학생 마당 🎒":
         st.markdown(f"**현재 주간 미션 실천율:** `{int(sc/7*100)}%` ({sc} / 7일 성공)")
         
         st.markdown("---")
-        st.subheader("<b>💌 담임 선생님께 비밀 상담 편지 보내기</b>", unsafe_allow_html=True)
+        # [오류 해결 패치 완료]: 최신 파이썬 규격에 맞춰 불순한 HTML 태그를 제거하고 올바른 마크다운 구조로 전면 수정함!
+        st.subheader("💌 담임 선생님께 비밀 상담 편지 보내기")
         student_msg = st.text_input("선생님께만 전하고 싶은 각오나 마음:", placeholder="예: 선생님, 저 내일부터 뺄셈 함정 조심하기 미션 꼭 실천해 볼게요!")
         if st.button("비밀 편지 발송하기 📮"):
             if student_msg:
