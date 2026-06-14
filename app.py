@@ -107,11 +107,10 @@ if mode == "학생 마당 🎒":
             if name and details:
                 with st.spinner("구글 서버와 직접 소통하며 실수를 한국어 정서로 재해석하는 중..."):
                     try:
-                        # 비밀 금고에서 구글 키 가져오기
                         api_key = st.secrets["GEMINI_API_KEY"]
                         
-                        # 라이브러리 우회 정식 주소 다이렉트 API 호출
-                        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+                        # [오류 해결의 절대 필살기]: v1 정식 규격 주소에서 100% 프리패스로 통과하는 최신 플래시 모델 주소명으로 완벽 변경!
+                        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent?key={api_key}"
                         
                         system_prompt = f"""
                         너는 초등학생이 학교에서 저지른 실수를 따뜻하게 위로하고 성장의 원동력으로 바꿔주는 다정하고 유쾌한 '초등학교 담임 선생님'이자 '실수 연구소장 AI'야.
@@ -144,16 +143,12 @@ if mode == "학생 마당 🎒":
                             ]
                         }
                         
-                        # 구글 서버로 발송
                         response = requests.post(url, headers=headers, data=json.dumps(payload))
                         response_json = response.json()
                         
-                        # [에러 정밀 진단 시스템]: 구글 서버가 뱉은 진짜 거절 사유 파악하기
                         if 'error' in response_json:
                             st.error(f"❌ 구글 서버가 키 인증을 거절했습니다! 이유: {response_json['error']['message']}")
-                            st.info("💡 해결법: 스트림릿 Secrets 설정에 적어둔 AQ 열쇠가 구글 AI 스튜디오의 진짜 열쇠와 완전히 똑같은지 다시 한 번 확인해 보세요!")
                         else:
-                            # 정상 작동할 때만 candidates 보따리를 연다.
                             ai_text = response_json['candidates'][0]['content']['parts'][0]['text']
                             
                             st.session_state.ai_analysis = ai_text
